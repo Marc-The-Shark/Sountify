@@ -5,10 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_server/http_server.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:sountify/services/spotify_service.dart';
 import 'package:sountify/screens/loading_screen.dart';
+
+import 'models/user.dart';
+
+final User user = User();
 
 void main() async {
   await DotEnv().load('.env');
@@ -32,7 +37,11 @@ void main() async {
           'code': body.request.uri.queryParameters['code'],
           'redirect_uri': SpotifyService.redirectURI
         });
-
+        var tokenDict = jsonDecode(tokenResponse.body);
+        http.Response playlists = await http.get('${SpotifyService.apiURL}me/playlists', headers: {'Authorization': 'Bearer ${tokenDict['access_token']}'});
+        for (var playlist in jsonDecode(playlists.body)){
+          print(playlist);
+        }
       } else
         body.request.response.write('pinki ponko');
       body.request.response.close();
@@ -46,10 +55,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
+    return ChangeNotifierProvider<User>(
+      create: (context) => user,
+      child: MaterialApp(
+        title: 'Flutter Demo',
 //      theme: ThemeData.dark(),
-      home: SpotifyLogin(),
+        home: SpotifyLogin(),
+      ),
     );
   }
 }
