@@ -13,11 +13,15 @@ import 'package:sountify/screens/loading_screen.dart';
 void main() async {
   await DotEnv().load('.env');
   SpotifyService spotifyService = SpotifyService();
-  http.Response response = await spotifyService.authorize();
 
   HttpServer.bind('0.0.0.0', 8888).then((server) {
     print('Server running at: ${server.address.address}');
     server.transform(HttpBodyHandler()).listen((HttpRequestBody body) async {
+      body.request.response.headers.set("Content-Type", "application/json");
+      body.request.response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS, GET");
+      body.request.response.headers.add("Access-Control-Allow-Origin", "*");
+      body.request.response.headers.add('Access-Control-Allow-Headers', '*');
+      body.request.response.headers.add('X-Frame-Options', '*');
       print('not so nice, but ok');
       if(body.request.uri.toString().contains('callback')){
         print('nice');
@@ -27,13 +31,10 @@ void main() async {
     });
   });
 
-  runApp(MyApp(response.body));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp(this.loginHTML);
-
-  final String loginHTML;
 
   // This widget is the root of your application.
   @override
@@ -41,37 +42,28 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
 //      theme: ThemeData.dark(),
-      home: SpotifyLogin(loginHTML),
+      home: SpotifyLogin(),
     );
   }
 }
 
 class SpotifyLogin extends StatelessWidget {
-  SpotifyLogin(this.loginHTML);
-
-  final String loginHTML;
-
   @override
   Widget build(BuildContext context) {
     SpotifyService spotifyService = SpotifyService();
-    String redirectURI = 'http://localhost:8888/callback/';
-    String authorizeUrl =
-        'https://accounts.spotify.com/authorize?client_id=${spotifyService.clientID}&response_type=code&'
-        'redirect_uri=$redirectURI&scope=streaming%20user-modify-playback-state%20playlist-read-collaborative%20'
-        'playlist-read-private%20user-read-currently-playing%20'
-        'user-library-read%20user-read-playback-state%20app-remote-control';
+
     WebViewController _controller;
     return Scaffold(
       appBar: AppBar(title: Text('Help')),
       body: WebView(
-        initialUrl: authorizeUrl,
+//        initialUrl: authorizeUrl,
         javascriptMode: JavascriptMode.unrestricted,
         javascriptChannels: <JavascriptChannel>[
           _toasterJavascriptChannel(context),
         ].toSet(),
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
-          _controller.loadUrl(authorizeUrl);
+          _controller.loadUrl(spotifyService.authorizeURL);
         },
       ),
     );

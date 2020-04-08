@@ -10,11 +10,11 @@ class SpotifyService extends Service {
   final String clientID = DotEnv().env['SPOTIFY_CLIENT_ID'];
   final String secretKey = DotEnv().env['SPOTIFY_CLIENT_SECRET'];
 
-  Future<http.Response> authorize() async {
-    return await http.get(
-        'https://accounts.spotify.com/authorize?client_id=$clientID&response_type=code&'
-            'redirect_uri=localhost:8080/&&scope=streaming%20user-modify-playback-state%20playlist-read-collaborative%20'
-            'playlist-read-private%20user-read-currently-playing%20'
-            'user-library-read%20user-read-playback-state%20app-remote-control');
+  String get authorizeURL {
+    String redirectURI = 'http://localhost:8888/callback/';
+    return 'https://accounts.spotify.com/authorize?client_id=$clientID&response_type=code&'
+        'redirect_uri=$redirectURI&scope=streaming%20user-modify-playback-state%20playlist-read-collaborative%20'
+        'playlist-read-private%20user-read-currently-playing%20'
+        'user-library-read%20user-read-playback-state%20app-remote-control';
   }
 }
