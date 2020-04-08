@@ -10,24 +10,38 @@ import 'package:sountify/screens/loading_screen.dart';
 
 void main() async {
   await DotEnv().load('.env');
-  SpotifyService spotifyService = SpotifyService();
-
-  HttpServer.bind('0.0.0.0', 8888).then((server) {
-    print('Server running at: ${server.address.address}');
+  await HttpServer.bind(InternetAddress.loopbackIPv4, 8888).then((server) {
+    print('Server running at: ${server.
+    address.address}');
     server.transform(HttpBodyHandler()).listen((HttpRequestBody body) async {
+      print(body.request.uri.toString());
       body.request.response.headers.set("Content-Type", "application/json");
       body.request.response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS, GET");
       body.request.response.headers.add("Access-Control-Allow-Origin", "*");
       body.request.response.headers.add('Access-Control-Allow-Headers', '*');
       body.request.response.headers.add('X-Frame-Options', '*');
-      print('not so nice, but ok');
       if(body.request.uri.toString().contains('callback')){
-        print('nice');
         body.request.response.write('pups');
-        body.request.response.close();
       }
+      else body.request.response.write('pinki ponko');
+      body.request.response.close();
     });
   });
+
+//  var server = await HttpServer.bind(InternetAddress.loopbackIPv4,8888).then((server) {
+//    server.transform(HttpBodyHandler()).listen((HttpRequestBody body) async {
+//      print("request inc");
+//      body.request.response.headers.set("Content-Type", "text/html; charset=utf-8");
+//      body.request.response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS, GET");
+//      body.request.response.headers.add("Access-Control-Allow-Origin", "*");
+//      body.request.response.headers.add('Access-Control-Allow-Headers', '*');
+//      body.request.response.headers.add('X-Frame-Options', '*');
+//      body.request.response.write(spotifyResponse.body);
+//      body.request.response.close();
+//    });
+////    request.response.headers.contentType = ContentType('text' , 'html');
+////    request.response.write(spotifResponse.body);
+//  });
 
   runApp(MyApp());
 }
@@ -49,12 +63,11 @@ class SpotifyLogin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SpotifyService spotifyService = SpotifyService();
-
+    String authURL = spotifyService.authorizeURL;
     WebViewController _controller;
     return Scaffold(
       appBar: AppBar(title: Text('Help')),
       body: WebView(
-//        initialUrl: authorizeUrl,
         javascriptMode: JavascriptMode.unrestricted,
         javascriptChannels: <JavascriptChannel>[
           _toasterJavascriptChannel(context),
