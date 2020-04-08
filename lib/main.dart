@@ -20,13 +20,6 @@ void main() async {
   await HttpServer.bind(InternetAddress.loopbackIPv4, 8888).then((server) {
     print('Server running at: ${server.address.address}');
     server.transform(HttpBodyHandler()).listen((HttpRequestBody body) async {
-      print(body.request.uri.toString());
-      body.request.response.headers.set("Content-Type", "application/json");
-      body.request.response.headers
-          .add("Access-Control-Allow-Methods", "POST, OPTIONS, GET");
-      body.request.response.headers.add("Access-Control-Allow-Origin", "*");
-      body.request.response.headers.add('Access-Control-Allow-Headers', '*');
-      body.request.response.headers.add('X-Frame-Options', '*');
       if (body.request.uri.toString().contains('callback')) {
         http.Response tokenResponse =
             await http.post('https://accounts.spotify.com/api/token', headers: {
@@ -37,8 +30,9 @@ void main() async {
           'code': body.request.uri.queryParameters['code'],
           'redirect_uri': SpotifyService.redirectURI
         });
-        var tokenDict = jsonDecode(tokenResponse.body);
-        http.Response playlists = await http.get('${SpotifyService.apiURL}me/playlists', headers: {'Authorization': 'Bearer ${tokenDict['access_token']}'});
+        var tokensDict = jsonDecode(tokenResponse.body);
+        user.setSpotifyTokens(tokensDict);
+        http.Response playlists = await http.get('${SpotifyService.apiURL}me/playlists', headers: {'Authorization': 'Bearer ${tokensDict['access_token']}'});
         for (var playlist in jsonDecode(playlists.body)){
           print(playlist);
         }
@@ -69,29 +63,15 @@ class MyApp extends StatelessWidget {
 class SpotifyLogin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    SpotifyService spotifyService = SpotifyService();
-    String authURL = spotifyService.authorizeURL;
     WebViewController _controller;
     return Scaffold(
-      appBar: AppBar(title: Text('Help')),
       body: WebView(
         javascriptMode: JavascriptMode.unrestricted,
-        javascriptChannels: <JavascriptChannel>[
-          _toasterJavascriptChannel(context),
-        ].toSet(),
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
-          _controller.loadUrl(spotifyService.authorizeURL);
+          _controller.loadUrl(SpotifyService.authorizeURL);
         },
       ),
     );
-  }
-
-  JavascriptChannel _toasterJavascriptChannel(BuildContext context) {
-    return JavascriptChannel(
-        name: 'Toaster',
-        onMessageReceived: (JavascriptMessage message) {
-          print(message);
-        });
   }
 }
