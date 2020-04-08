@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 import 'package:http_server/http_server.dart';
 import 'package:sountify/services/spotify_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';

@@ -1,8 +1,4 @@
-import 'dart:async';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
-
 import 'package:sountify/services/common.dart';
 
 class SpotifyService extends Service {
